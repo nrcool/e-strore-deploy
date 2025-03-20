@@ -36,7 +36,7 @@ app.use(express.json()); // parse any incoming json data and store in req.body
 //cookie parser middleware( parse your cookie header and give cookies data in req.cookies)
 app.use(cookieParser());
 
-app.post("/create-checkout-session", async (req, res) => {
+app.post("/create-checkout-session", auth, async (req, res) => {
   const { carts } = req.body;
   console.log(carts);
   const session = await stripe.checkout.sessions.create({
@@ -57,10 +57,49 @@ app.post("/create-checkout-session", async (req, res) => {
     mode: "payment",
     success_url: `https://e-strore-deploy.onrender.com/?success=true`,
     cancel_url: `https://e-strore-deploy.onrender.com/?canceled=true`,
+    metadata: {
+      productIds: carts.map((item) => item._id).join(","),
+      userId: req.user._id.toString(),
+    },
   });
 
   res.send({ id: session.id });
 });
+
+// This is your Stripe CLI webhook secret for testing your endpoint locally.
+const endpointSecret = process.env.SIGNING_SECRET;
+
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  (request, response) => {
+    const sig = request.headers["stripe-signature"];
+
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    } catch (err) {
+      response.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+
+    // Handle the event
+    switch (event.type) {
+      case "checkout.session.completed":
+        const session = event.data.object;
+        console.log(session);
+        // Then define and call a function to handle the event checkout.session.completed
+        break;
+      // ... handle other event types
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    // Return a 200 response to acknowledge receipt of the event
+    response.send();
+  }
+);
 
 //middleware (its a function , it receives 3 parameters , req,res,next) ,can send back response to client or forward your request to next handler
 

@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 import UsersModel from "../models/userSchema.js";
 export const auth = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
-    console.log(req.session);
+    const token = req.headers.token;
+
     if (token) {
       const decode = jwt.verify(token, process.env.SECRET_KEY);
       if (!decode) throw new Error("invalid token");
