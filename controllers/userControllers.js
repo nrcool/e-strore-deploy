@@ -82,12 +82,12 @@ export const loginUser = async (req, res, next) => {
         );
 
         /*   res.send({ success: true, data: user, token }); */
-        /* res.header("token", token).send({ success: true, data: user }); */
+        res.header("token", token).send({ success: true, data: user });
         /*  console.log(req.session);
         req.session.isAuthenticated = true;
         req.session.token = token;
         console.log(req.session.id); */
-        res.send({ success: true, data: user });
+        /* res.send({ success: true, data: user }); */
       } else {
         throw new Error("passowrd doesnt match..");
       }
