@@ -12,6 +12,7 @@ import cors from "cors";
 import ImageModel from "./models/imageSchema.js";
 import { Readable } from "stream";
 import cookieParser from "cookie-parser";
+import OrdersModel from "./models/orderSchema.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -36,7 +37,7 @@ const endpointSecret = process.env.SIGNING_SECRET;
 app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
-  (request, response) => {
+  async (request, response) => {
     const sig = request.headers["stripe-signature"];
 
     console.log("webhook working ....");
@@ -53,9 +54,22 @@ app.post(
     switch (event.type) {
       case "checkout.session.completed":
         const session = event.data.object;
-        console.log(session);
+
+        // add order in database ...
+        const products = session.metadata?.productIds
+          .split(",")
+          .map((id) => new mongoose.Types.ObjectId(id));
+        const userId = new mongoose.Types.ObjectId(session.metadata?.userId);
+        const totalPrice = parseInt(session.amount_total.toFixed(2));
+
+        const order = await OrdersModel.create({
+          userId,
+          products,
+          totalPrice,
+        });
+        console.log(order);
         // Then define and call a function to handle the event checkout.session.completed
-        break;
+        session.break;
       // ... handle other event types
       default:
         console.log(`Unhandled event type ${event.type}`);
