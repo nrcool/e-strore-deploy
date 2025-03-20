@@ -12,7 +12,6 @@ import cors from "cors";
 import ImageModel from "./models/imageSchema.js";
 import { Readable } from "stream";
 import cookieParser from "cookie-parser";
-import expressSession from "express-session";
 
 const PORT = process.env.PORT || 5000;
 
@@ -33,16 +32,6 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.static("views"));
 //json middleware
 app.use(express.json()); // parse any incoming json data and store in req.body
-app.use(
-  expressSession({
-    secret: "hello",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      expires: new Date(Date.now() + 86400000), // Expires in 1 day (24 hours)
-    },
-  })
-);
 
 //cookie parser middleware( parse your cookie header and give cookies data in req.cookies)
 app.use(cookieParser());
@@ -66,8 +55,8 @@ app.post("/create-checkout-session", async (req, res) => {
     }),
 
     mode: "payment",
-    success_url: `http://localhost:5173?success=true`,
-    cancel_url: `http://localhost:5173/?canceled=true`,
+    success_url: `https://e-strore-deploy.onrender.com/?success=true`,
+    cancel_url: `https://e-strore-deploy.onrender.com/?canceled=true`,
   });
 
   res.send({ id: session.id });
